@@ -1,5 +1,5 @@
-# beaglecar
-This is an attempt to convert a freescale race car using BeagleBone blue
+# beaglecar on raspberry pi
+This is an attempt to create a racecar using a raspberrypi and ROS (Python2.7)
 
 Dependencies:
 Check requirements.txt
@@ -8,24 +8,13 @@ Check requirements.txt
 
 2. Machine Learning Car was created by Kendrick Tan (from Australia) [https://github.com/kendricktan/suiron]
 
-2. Install tensorflow [https://github.com/samjabrahams/tensorflow-on-raspberry-pi/releases]
+3. Install tensorflow https://github.com/lhelontra/tensorflow-on-arm/releases.
 
-```
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install python3-opencv python3-dev libhdf5-dev
-sudo apt-get install libfreetype6-dev pkg-config gfortran
-sudo apt-get install libblas3 liblapack3 liblapack-dev libblas-dev
-```
+
 #1. Install Tensorflow [about 20 mins]
 ```
-cd && wget -c https://www.python.org/ftp/python/3.4.10/Python-3.4.10.tgz
-tar -xvf Python-3.4.10.tgz && cd Python-3.4.10
-./configure
-make -j2
-sudo make install -j2
-wget https://github.com/samjabrahams/tensorflow-on-raspberry-pi/releases/download/v1.1.0/tensorflow-1.1.0-cp34-cp34m-linux_armv7l.whl
-sudo pip3 install tensorflow-1.1.0-cp36-cp36m-linux_armv7l.whl 
+wget https://github.com/lhelontra/tensorflow-on-arm/releases/download/v1.14.0/tensorflow-1.14.0-cp27-none-linux_armv7l.whl
+sudo  pip  install tensorflow-1.14.0-cp27-none-linux_armv7l.whl 
 ```
 
 #2. Install h5py [about 1 hour] ....
