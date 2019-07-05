@@ -76,7 +76,9 @@ class SuironIO(clock.Action):
 #            print(serialize_image(frame))
                 self.servo_results.append(servo)
                 self.motorspeed_results.append(motor)
-            
+                ret_frame=np.reshape(frame,(self.height, self.width, self.depth))
+               
+                return ret_frame
 
     # Gets frame
     def get_frame(self):
