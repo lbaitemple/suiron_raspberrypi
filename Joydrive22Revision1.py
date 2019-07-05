@@ -44,7 +44,7 @@ suironio.init_saving()
 clck=Clock(suironio, 1000)
 clck.start() 
 #clck.join()
-imgpub = rospy.Publisher('carimg/image_raw', Image, queue_size=1)
+imgpub = rospy.Publisher('carimg/image_raw', Image, queue_size=10) # add a larger queue size
 #Our attempt to speed up the process
 nos = os.system
 
@@ -87,7 +87,7 @@ def callback(data):
     img=suironio.record_inputs(status)
     
     print("--->", img.shape)
-    image_message = br.cv2_to_imgmsg(img)
+    image_message = br.cv2_to_imgmsg(img, encoding="rgb8")
     imgpub.publish(image_message)
     if speed > maxspeed:
         speed = maxspeed
