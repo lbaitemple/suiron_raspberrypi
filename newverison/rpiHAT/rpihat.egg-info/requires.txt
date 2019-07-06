@@ -1,3 +1,0 @@
-smbus
-adafruit-pca9685
-wiringpi
