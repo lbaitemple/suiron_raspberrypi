@@ -32,8 +32,16 @@ source devel/setup.bash
 ```
 
 
-Run ROSfile
+In three seperated terminals Run ROSfile
 ```
 rosrun  simp_motor Joydrive22Revision2.py
+```
+
+```
 rosrun web_video_servo web_video_servo 
+```
+
+
+```
+rostopic pub /joy sensor_msgs/Joy '{ header: {seq: 10, stamp: {secs: 143122243 nsecs: 345678}, frame_id: "3"}, axes: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0], buttons: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}'
 ```
