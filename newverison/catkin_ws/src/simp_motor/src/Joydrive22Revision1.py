@@ -18,7 +18,8 @@ if REV == 2.3:
 #    import Adafruit_PCA9685
 # Initialise the PCA9685 using the default address (0x40).
     pwm = Adafruit_PCA9685.PCA9685(0x40)
-    pwm.set_pwm_freq(92.7)
+    pwm.set_pwm_freq(97.1)
+#-------------------------------------------------------------
 #---------------------------------------------------------------
 #Set you max speeds forward(maxspeed) and backwards(minspeed) 
 maxspeed = 0.17
@@ -52,13 +53,24 @@ def setspeed23(pin, sped):
     pwm.set_pwm(pin, 0, pos)
 
 def callback(data):
+#    if data.buttons[4] == 1:
+#        maxspeed = maxspeed - 0.01
+#        print("your max speed is ",maxspeed)
+#    if data.buttons[5] == 1:
+#        maxspeed = maxspeed + 0.01
+#        print("your max speed is ", maxspeed)
+
     turn = abs(0.05*data.axes[0]-0.15)
     speed  = 0.05*data.axes[1]+0.15    
-#    pwm.set_pwm(8, 0, int(speed))
+    pwm.set_pwm(8, 0, int(speed))
     if speed > maxspeed:
         speed = maxspeed
     elif speed < minspeed:
         speed = minspeed
+    if data.buttons[0] == 1:
+        speed = 0.15
+        turn = 0.15
+        print("You are braking !!")
     if REV == 2.2:
         print("This is Motor values" , speed)
         setspeed22(12, speed)
@@ -79,6 +91,7 @@ def listener():
 
 
 #START
+
 REV == 2.3
 if __name__ == '__main__':
     if REV == 2.2:
@@ -86,4 +99,5 @@ if __name__ == '__main__':
             nos(cmd[i])
             print(cmd[i])
     listener()
+
 

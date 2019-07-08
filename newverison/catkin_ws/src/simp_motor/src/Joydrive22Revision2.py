@@ -8,6 +8,7 @@ import settings
 from settings import wiringport
 import os,sys, select, termios, tty
 from suiron import SuironIO
+from suiron import Clock
 import json
 import time
 from cv_bridge import CvBridge, CvBridgeError
@@ -20,7 +21,7 @@ if REV == 2.3:
 #    import Adafruit_PCA9685
 # Initialise the PCA9685 using the default address (0x40).
     pwm = Adafruit_PCA9685.PCA9685(0x40)
-    pwm.set_pwm_freq(92.7)
+    pwm.set_pwm_freq(97.1)
 #---------------------------------------------------------------
 #Set you max speeds forward(maxspeed) and backwards(minspeed) 
 maxspeed=0.17
@@ -29,6 +30,7 @@ minspeed=0.13
 
 #Our attempt to speed up the process
 nos = os.system
+#buttonWasPressed = False
 
 with open('/home/ubuntu/settings.json') as d:
     SETTINGS = json.load(d)
@@ -38,7 +40,8 @@ br=CvBridge()
 print(SETTINGS['width'], SETTINGS['height'])
 suironio = SuironIO(id=0, width=SETTINGS['width'], height=SETTINGS['height'], depth=SETTINGS['depth'])
 suironio.init_saving()
-
+clck=Clock(suironio, 10)
+clck.start()
 
 if REV == 2.2:
     s0 = wiringport[settings.PINS['servo0']]
@@ -60,31 +63,38 @@ def setspeed22(pin, sped):
 
 def setspeed23(pin, sped):
     pos = int(sped*4096)
-    print(pos)
+   # print(pos)
     pwm.set_pwm(pin, 0, pos)
 
 def callback(data):
-    turn = abs(0.05*data.axes[0]-0.15)
-    speed  = 0.05*data.axes[1]+0.15    
-    pwm.set_pwm(8, 0, int(speed))
-    s={}
-    s['motor']=speed
-    s['servo']=turn
-    img=suironio.record_inputs(s)
-    if speed > maxspeed:
-        speed = maxspeed
-    elif speed < minspeed:
-        speed = minspeed
-    if REV == 2.2:
-        print("This is Motor values" , speed)
-        setspeed22(12, speed)
-        print("This is servo values" , turn)
-        setspeed22(13, turn)
-    elif REV == 2.3:
-        print("This is Motor values for 2.3" , speed)
-        setspeed23(8, speed)
-        print("This is Motor values for 2.3" , turn)
-        setspeed23(9,turn)
+    global buttonWasPressed
+    if (not buttonWasPressed and
+           ( data.axes[0] != 0 or 
+           data.axes[1] != 0)):
+
+        turn = abs(0.05*data.axes[0]-0.15)
+        speed  = 0.05*data.axes[1]+0.15    
+        pwm.set_pwm(8, 0, int(speed))
+        s={}
+        s['motor']=speed
+        s['servo']=turn
+#    suironio.record_inputs(s)
+        if speed > maxspeed:
+            speed = maxspeed
+        elif speed < minspeed:
+            speed = minspeed
+        if REV == 2.2:
+           # print("This is Motor values" , speed)
+            setspeed22(12, speed)
+       # print("This is servo values" , turn)
+            setspeed22(13, turn)
+        elif REV == 2.3:
+       # print("This is Motor values for 2.3" , speed)
+            setspeed23(8, speed)
+       # print("This is Motor values for 2.3" , turn)
+            setspeed23(9,turn)
+        buttonWasPressed = True
+        suironio.record_inputs(s)
 
 #START
 REV == 2.3
@@ -93,10 +103,12 @@ if __name__ == '__main__':
         for i in range(0, len(cmd)):
             nos(cmd[i])
             print(cmd[i])
-
+    global buttonWasPressed
+    
+    buttonWasPressed = False
     rospy.init_node('sss')
     sub=rospy.Subscriber("joy", Joy, callback)
-    pub=rospy.Publisher('carimage/raw_image', Image, queue_size=10) 
+    pub=rospy.Publisher('carimage/raw_image/compressed', Image, queue_size = 1) 
     rate = rospy.Rate(10)
 
     while  not rospy.is_shutdown():
@@ -104,9 +116,11 @@ if __name__ == '__main__':
             img=suironio.get_camframe()
             image_message = br.cv2_to_imgmsg(img, encoding="bgr8")
             pub.publish(image_message)
+            buttonWasPressed=False
             rate.sleep()
         except KeyboardInterrupt:
             break
 
     print('Saving file...')
-    suironio.save_inputs()
+    clck.stop()
+#    suironio.save_inputs()
