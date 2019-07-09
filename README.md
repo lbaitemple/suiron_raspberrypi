@@ -57,7 +57,10 @@ sudo pip install --upgrade $TF_BINARY_URL
 
 sudo pip install -r requirements.txt
 ```
-
+For CV
+```
+sudo pip2 install opencv-python==3.3.0.10
+```
 ## Collecting data
 ```
 python collect.py
