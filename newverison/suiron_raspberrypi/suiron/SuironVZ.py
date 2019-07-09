@@ -34,7 +34,7 @@ def visualize_data(filename, width=72, height=48, depth=3, cnn_model=None, conf=
 
         # Motor values
         # RGB
-        cur_motor=int(900*(cur_motor-0.15)+105)
+        cur_motor=int(1800*(cur_motor-0.15)+90)
         cv2.line(cur_img_array, (50, 160), (50, 160-(90-cur_motor)), raw_motor_to_rgb(cur_motor), 3)
 
         # If we wanna visualize our cnn_model
