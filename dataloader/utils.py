@@ -5,7 +5,7 @@ import torchvision.transforms.functional as tf
 import random
 from PIL import Image
 
-IMAGE_HEIGHT, IMAGE_WIDTH = 70, 40
+IMAGE_HEIGHT, IMAGE_WIDTH = 80, 160
 
 def get_weights(dataset):
 
@@ -42,13 +42,12 @@ class Preprocess(object):
     """
     Crop the image by removing the sky and car front from the image 
     """
-    
     def crop(self, sample):
         image, target = sample['image'], sample['target']     
         w, h = image.size  
         image = image.crop((0, 60, w, h-25))
         return {'image': image, 'target': target}
-    
+
     """
     Resize the image to the given output size
     """

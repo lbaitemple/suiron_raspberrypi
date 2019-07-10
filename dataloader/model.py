@@ -267,13 +267,13 @@ class Model():
     # Predict control tensor from image
     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    def predict(self, image, preloaded=True):
+    def predict(self, image, preloaded=False):
         # set test mode
         self.net.eval()
 
-        #if (not preloaded):
-        self.loadModel()
-        print('Loaded Model')
+        if (not preloaded):
+            self.loadModel()
+            print('Loaded Model')
 
         composed=transforms.Compose([
             utils.Preprocess(self.input_shape),
@@ -286,6 +286,7 @@ class Model():
         inputs = sample['image']
         # Add single batch diemension
         inputs = inputs.unsqueeze(0)
+
         if (self.cfg.cuda):
             inputs = Variable(inputs.cuda(non_blocking=True))
         else:
