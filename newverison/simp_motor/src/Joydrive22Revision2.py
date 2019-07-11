@@ -17,11 +17,11 @@ from threading import Lock
 #-----------------------------------------------------------------
 REV = 2.3 # select your board 
 # If your board has a PWM module built in we will need the correct chip
-#if REV == 2.3:
+if REV == 2.3:
 #    import Adafruit_PCA9685
 # Initialise the PCA9685 using the default address (0x40).
-#    pwm = Adafruit_PCA9685.PCA9685(0x40)
-#    pwm.set_pwm_freq(97.1)
+    pwm = Adafruit_PCA9685.PCA9685(0x40)
+    pwm.set_pwm_freq(97.1)
 #---------------------------------------------------------------
 #Set you max speeds forward(maxspeed) and backwards(minspeed) 
 maxspeed=0.17
@@ -65,7 +65,7 @@ def setspeed22(pin, sped):
 def setspeed23(pin, sped):
     pos = int(sped*4096)
     print(pos)
-#    pwm.set_pwm(pin, 0, pos)
+    pwm.set_pwm(pin, 0, pos)
 
 def callback(data):
 #    global buttonWasPressed
