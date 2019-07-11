@@ -4,11 +4,12 @@ import numpy as np
 import pandas as pd
 import cv2, os, csv
 import matplotlib.pyplot as plt
+from . import clock as clock
 from .functions import cnn_to_raw
 from .img_serializer import serialize_image
 from .file_finder import get_new_filename
 
-class SuironIO():
+class SuironIO(clock.Action):
     """
     Class which handles input output aspect of the suiron 
     - Reads inputs from webcam and normalizes them
@@ -21,13 +22,14 @@ class SuironIO():
         self.width = int(width)
         self.height = int(height)
         self.depth = int(depth)
-        self.sz=self.width *self.height  *self.depth  
+        self.sz=self.width *self.height  *self.depth 
+        self.locked = False 
         # Video IO 
         self.cap =  cv2.VideoCapture(id) # Use first capture device
 
         # Serial IO
         self.outfile = None        
-
+        self.header= False
         # In-memory variable to record data
         # to prevent too much I/O
         self.frame_results = []
@@ -44,6 +46,10 @@ class SuironIO():
         print(fileoutname)
         outfile = open(fileoutname, 'w') # Truncate file first
         self.outfile = open(fileoutname, 'a')
+        self.df = pd.DataFrame([], columns=['image', 'servo', 'motor'])
+        self.df.to_csv(self.outfile)
+        self.header = True
+
 
     def start(self, period):
         thread=clock.Clock(self, period)
@@ -51,43 +57,49 @@ class SuironIO():
         return thread
 
     def run(self):
-        time.sleep(0.1)
+        time.sleep(0.01)
     # Saves both inputs
+    def lock(self, locked = True):
+        self.locked = locked
+    def unlock(self):
+        self.locked = False
+    def check_lock(self):
+        return self.locked
     def record_inputs(self, s_inputs):
         # Frame is just a numpy array
-        frame = self.get_frame()
-
+        if (not self.check_lock()):
+            frame = self.get_frame()
+            self.lock()
         # Serial inputs is a dict with key 'servo', and 'motor'
 
         # If its not in manual mode then proceed
 #        print("yeah")
 #        print("helllo {}".format(s_inputs))
-        if s_inputs:
-            servo = s_inputs['servo'] 
-            motor = s_inputs['motor'] 
+            if s_inputs:
+                servo = s_inputs['servo'] 
+                motor = s_inputs['motor'] 
 
             # Append to memory
             # tolist so it actually appends the entire thing
-            dat=serialize_image(frame)
+                dat=serialize_image(frame)
 #            print(len(dat))
-            if (len(dat)==self.sz):
-                self.frame_results.append(dat)
+                if (len(dat)==self.sz):
+                    self.frame_results.append(dat)
 #            print(serialize_image(frame))
-                self.servo_results.append(servo)
-                self.motorspeed_results.append(motor)
-                ret_frame=np.reshape(frame,(self.height, self.width, self.depth))
-               
-                return ret_frame
-
+                    self.servo_results.append(servo)
+                    self.motorspeed_results.append(motor)
+    		    self.append_inputs()
+                    self.unlock()
     # Gets frame
     def get_frame(self):
         ret, frame = self.cap.read()
-
+    
         # If we get a frame, save it
         if not ret:
             raise IOError('No image found!')
 
         frame = self.normalize_frame(frame)
+        
         return frame
 
     # Gets frame
@@ -142,6 +154,28 @@ class SuironIO():
         }
         df = pd.DataFrame(raw_data, columns=['image', 'servo', 'motor'])
         df.to_csv(self.outfile)
+
+    # Saves files
+    def append_inputs(self):
+        raw_data = {
+            'image': self.frame_results, 
+            'servo': self.servo_results,
+            'motor': self.motorspeed_results
+        }
+#        df = pd.DataFrame(raw_data, columns=['image', 'servo', 'motor'])
+#        df.to_csv(self.outfile)
+        if (self.header):
+            self.df = pd.DataFrame(raw_data, columns=['image', 'servo', 'motor'])
+            self.df.to_csv(self.outfile, mode='a', header=False)
+            self.frame_results = []
+            self.servo_results = []
+            self.motorspeed_results = [] 
+
+        else:
+            self.df = pd.DataFrame(raw_data, columns=['image', 'servo', 'motor'])
+            self.df.to_csv(self.outfile)
+            self.header=True
+
 
     """ Functions below are used for ouputs (controlling servo/motor) """    
     # Controls the servo given the numpy array outputted by

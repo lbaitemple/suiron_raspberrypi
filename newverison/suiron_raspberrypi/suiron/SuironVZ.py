@@ -17,9 +17,9 @@ def visualize_data(filename, width=72, height=48, depth=3, cnn_model=None, conf=
 
     for i in data.index:
         cur_img = data['image'][i]
-        cur_throttle = float(data['servo'][i])
-        cur_motor = float(data['motor'][i])        
-        print(cur_motor)
+        cur_throttle = int(data['servo'][i])
+        cur_motor = int(data['motor'][i])        
+        
         # [1:-1] is used to remove '[' and ']' from string 
         cur_img_array = deserialize_image(cur_img, config=conf)        
         y_input = cur_img_array.copy() # NN input
@@ -29,12 +29,10 @@ def visualize_data(filename, width=72, height=48, depth=3, cnn_model=None, conf=
 
         # Extra debugging info (e.g. steering etc)
         cv2.putText(cur_img_array, "frame: %s" % str(i), (5,35), cv2.FONT_HERSHEY_SIMPLEX, 1, 255)
-        cur_throttle=int(1800*(cur_throttle-0.15)+90)
         cv2.line(cur_img_array, (240, 300), (240-(90-cur_throttle), 200), (0, 255, 0), 3)
 
         # Motor values
         # RGB
-        cur_motor=int(1800*(cur_motor-0.15)+90)
         cv2.line(cur_img_array, (50, 160), (50, 160-(90-cur_motor)), raw_motor_to_rgb(cur_motor), 3)
 
         # If we wanna visualize our cnn_model
