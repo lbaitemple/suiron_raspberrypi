@@ -13,9 +13,9 @@ import json
 import time
 from cv_bridge import CvBridge, CvBridgeError
 import Adafruit_PCA9685
-
+from threading import Lock
 #-----------------------------------------------------------------
-REV = 2.3 # select your board 
+REV = 2.3 # select your board
 # If your board has a PWM module built in we will need the correct chip
 if REV == 2.3:
 #    import Adafruit_PCA9685
@@ -23,7 +23,7 @@ if REV == 2.3:
     pwm = Adafruit_PCA9685.PCA9685(0x40)
     pwm.set_pwm_freq(97.1)
 #---------------------------------------------------------------
-#Set you max speeds forward(maxspeed) and backwards(minspeed) 
+#Set you max speeds forward(maxspeed) and backwards(minspeed)
 maxspeed=0.17
 minspeed=0.13
 #-------------------------------------------------------------
@@ -40,7 +40,8 @@ br=CvBridge()
 print(SETTINGS['width'], SETTINGS['height'])
 suironio = SuironIO(id=0, width=SETTINGS['width'], height=SETTINGS['height'], depth=SETTINGS['depth'])
 suironio.init_saving()
-clck=Clock(suironio, 10)
+lock = Lock()
+clck=Clock(suironio, 0.01)
 clck.start()
 
 if REV == 2.2:
@@ -63,26 +64,38 @@ def setspeed22(pin, sped):
 
 def setspeed23(pin, sped):
     pos = int(sped*4096)
-   # print(pos)
+    print(pos)
     pwm.set_pwm(pin, 0, pos)
 
 def callback(data):
-    global buttonWasPressed
-    if (not buttonWasPressed and
-           ( data.axes[0] != 0 or 
-           data.axes[1] != 0)):
-
-        turn = abs(0.05*data.axes[0]-0.15)
-        speed  = 0.05*data.axes[1]+0.15    
-        pwm.set_pwm(8, 0, int(speed))
+#    global buttonWasPressed
+#    if (not buttonWasPressed and
+#           ( data.axes[0] != 0 or
+#           data.axes[1] != 0)):
+#    print(data.angular.z, data.linear.x)
+    print("locking")
+#    print "Delay:%6.3f" % (rospy.Time.now() - data.header.stamp).to_sec()
+    lock.acquire()
+    if (not suironio.check_lock()):
+        turn = abs((data.angular.z/8)-0.15)
+        speed  = (data.linear.x/14)+0.15
+#    if(speed != drive_msg):
+#       turn = abs((data.angular.z/8)-0.15)
+#       speed  = (data.linear.x/14)+0.15
+#        turn = abs(0.05*data.axes[0]-0.15)
+#        speed  = 0.05*data.axes[1]+0.15
+  # pwm.set_pwm(8, 0, int(speed))
+   # pwm.set_pwm(9, 0, int(turn))
         s={}
-        s['motor']=speed
-        s['servo']=turn
-#    suironio.record_inputs(s)
+#        s['motor']=speed
+#        s['servo']=turn
+#        suironio.record_inputs(s)
         if speed > maxspeed:
             speed = maxspeed
         elif speed < minspeed:
             speed = minspeed
+#    print("locking")
+#    lock.acquire()
         if REV == 2.2:
            # print("This is Motor values" , speed)
             setspeed22(12, speed)
@@ -93,9 +106,14 @@ def callback(data):
             setspeed23(8, speed)
        # print("This is Motor values for 2.3" , turn)
             setspeed23(9,turn)
-        buttonWasPressed = True
+   # buttonWasPressed = True
+        s['motor']=speed
+        s['servo']=turn
+        print("recording your stuff")
         suironio.record_inputs(s)
-
+        suironio.unlock()
+        lock.release()
+        print("Releasing")
 #START
 REV == 2.3
 if __name__ == '__main__':
@@ -104,12 +122,18 @@ if __name__ == '__main__':
             nos(cmd[i])
             print(cmd[i])
     global buttonWasPressed
-    
     buttonWasPressed = False
+#    print("locking")
+#    lock.acquire()
     rospy.init_node('sss')
-    sub=rospy.Subscriber("joy", Joy, callback)
-    pub=rospy.Publisher('carimage/raw_image/compressed', Image, queue_size = 1) 
-    rate = rospy.Rate(10)
+    sub=rospy.Subscriber("cmd_vel", Twist, callback, queue_size=1, tcp_nodelay=T$
+#    sub=rospy.Subscriber("joy", Joy, callback)
+#    lock.release()
+#    print("Releasing")
+    pub=rospy.Publisher('carimage/raw_image/compressed', Image, queue_size = 1, $
+    rate = rospy.Rate(15)
+#    lock.release()
+#    print("Releasing")
 
     while  not rospy.is_shutdown():
         try:
