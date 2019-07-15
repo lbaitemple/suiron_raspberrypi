@@ -50,6 +50,17 @@ class SuironIO(clock.Action):
         self.df.to_csv(self.outfile)
         self.header = True
 
+    def reinit_saving(self, folder='data', filename='output_', extension='.csv'):
+        fileoutname = get_new_filename(folder=folder, filename=filename, extension=extension)
+
+        # Filename to save serial data and image data
+        # Output file
+        print(fileoutname)
+        outfile = open(fileoutname, 'w') # Truncate file first
+        self.outfile = open(fileoutname, 'a')
+        self.df = pd.DataFrame([], columns=['image', 'servo', 'motor'])
+        self.df.to_csv(self.outfile)
+        self.header = True
 
     def start(self, period):
         thread=clock.Clock(self, period)
