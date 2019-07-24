@@ -1,5 +1,5 @@
-These files are used to run the pi car
-2. To start the webcam we will use 
+1) These files are used to run the pi car
+2) To start the webcam we will use 
 ```
 git clone https://github.com/jacksonliam/mjpg-streamer
 cd /mjpg-streamer/mjpg-streamer-experimental
